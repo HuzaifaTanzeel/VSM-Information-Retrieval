@@ -162,10 +162,9 @@ public:
                 }
             }
 
-
             for (int i = 0; i < terms.size(); i++)
             {
-                
+
                 for (int j = 0; j < terms[i].second.size(); j++)
                 {
                     terms[i].second[j].idf = log10(30 / terms[i].second.size());
@@ -173,33 +172,35 @@ public:
                 }
             }
         }
-
-        
-
-
     }
 
     void print_dictionary()
-{
-
-    for (int i = 0; i < terms.size() - 3000; i++)
     {
-        cout << terms[i].first << " : ";
 
-        for (int j = 0; j < terms[i].second.size(); j++)
+        for (int i = 0; i < terms.size() - 3000; i++)
         {
+            cout << terms[i].first << " : ";
 
-            cout << terms[i].second[j].doc_id << "--";
-            cout << terms[i].second[j].tf << "--";
-            cout << terms[i].second[j].idf << "--";
-            cout << terms[i].second[j].tf_idf;
-            cout << " ,";
+            for (int j = 0; j < terms[i].second.size(); j++)
+            {
+
+                cout << terms[i].second[j].doc_id << "--";
+                cout << terms[i].second[j].tf << "--";
+                cout << terms[i].second[j].idf << "--";
+                cout << terms[i].second[j].tf_idf;
+                cout << " ,";
+            }
+
+            cout << endl;
         }
 
-        cout << endl;
-    }
-}
 
+    }
+
+    void sort_dictionary()
+    {
+        sort(terms.begin(),terms.end());
+    }
 };
 
 /*vector<Posting> getPostings(string termName) {
@@ -211,7 +212,7 @@ public:
     return vector<Posting>(); // return empty vector if term not found
 }*/
 
-/* 
+/*
 
 /*void print_terms()
 {
@@ -219,10 +220,6 @@ public:
         cout<<term.name;
     }
 }*/
-
-
- 
-
 
 bool ends_with(string word, string suffix)
 {
