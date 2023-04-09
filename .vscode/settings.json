@@ -5,6 +5,9 @@
         "utility": "cpp",
         "variant": "cpp",
         "xstring": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "algorithm": "cpp",
+        "locale": "cpp",
+        "cmath": "cpp"
     }
 }
