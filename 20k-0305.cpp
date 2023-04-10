@@ -13,6 +13,7 @@
 #include <cmath>
 #include <iomanip>
 #include <sstream>
+#include <Windows.h>
 using namespace std;
 
 class Posting
@@ -133,7 +134,7 @@ class Dictionary
 {
 
 public:
-    vector<pair<string, vector<Posting>>> terms;
+    vector<pair<string, vector<Posting>>> terms;            //Data structure used
     vector<double> normalizedlengths;
     vector<double> max_freq;
 
@@ -150,7 +151,7 @@ public:
         for (int i = 0; i < tokens.size(); i++)
         {
 
-            if (!is_exist(terms, tokens[i]))
+            if (!is_exist(terms, tokens[i]))        //Term occuring first time in dictionary
             {
 
                 if (tokens[i].length() > 1)
@@ -163,8 +164,7 @@ public:
                     post.tf_idf = 0;
 
                     vector<Posting> v;
-                    if (tokens[i] == "cricket" && doc_id == 14)
-                        post.tf++;
+                    
 
                     v.push_back(post);
                     terms.push_back(make_pair(tokens[i], v));
@@ -172,22 +172,22 @@ public:
                     v.clear();
                 }
             }
-            else
+            else                                //Term exist in dictionary
             {
                 bool check = 0;
-                int ind = find_index(terms, tokens[i]);
+                int ind = find_index(terms, tokens[i]);             //Finding index of term occuring in dictionary
                 for (int l = 0; l < terms[ind].second.size(); l++)
                 {
-                    if (doc_id == terms[ind].second[l].doc_id)
+                    if (doc_id == terms[ind].second[l].doc_id)         //Doc id already exist
                     {
 
-                        terms[ind].second[l].tf += 1;
+                        terms[ind].second[l].tf += 1;                   //Increasing term frequency for that document
                         check = 1;
                         break;
                     }
                 }
 
-                if (check == 0)
+                if (check == 0)             //Document not exist
                 {
                     Posting post;
                     post.doc_id = doc_id;
@@ -201,7 +201,7 @@ public:
         }
     }
 
-    void calculate_maxfreq()
+   /* void calculate_maxfreq()
     {
         for (int i = 0; i < terms.size(); i++)
         {
@@ -216,9 +216,9 @@ public:
                 }
             }
         }
-    }
+    }*/
 
-    void calculate_tf()
+   /* void calculate_tf()
     {
         for (int i = 0; i < terms.size(); i++)
         {
@@ -234,35 +234,35 @@ public:
                 terms[i].second[j].tf = partial;
             }
         }
-    }
+    }*/
 
     void calculate_tfidfs()
     {
-        for (int i = 0; i < terms.size(); i++)
+        for (int i = 0; i < terms.size(); i++)                      //Iterating indices of dictionary
         {
 
-            for (int j = 0; j < terms[i].second.size(); j++)
+            for (int j = 0; j < terms[i].second.size(); j++)        //Iterating posting list
             {
 
-                double n = terms[i].second.size();
-                double tmp = log10(30 / n);
+                double n = terms[i].second.size();              //Size of Posting list
+                double tmp = log10(30 / n);                     //idf=log(N/df)
                 terms[i].second[j].idf = tmp;
-                terms[i].second[j].tf_idf = terms[i].second[j].tf * terms[i].second[j].idf;
+                terms[i].second[j].tf_idf = terms[i].second[j].tf * terms[i].second[j].idf;     //tf_idf=tf*idf
                 int docc_id = terms[i].second[j].doc_id;
-                normalizedlengths[docc_id - 1] += pow(terms[i].second[j].tf_idf, 2);
+                normalizedlengths[docc_id - 1] += pow(terms[i].second[j].tf_idf, 2);            //Calculating magnitude of documents 
             }
         }
 
         for (int i = 0; i < 30; i++)
         {
-            normalizedlengths[i] = sqrt(normalizedlengths[i]);
+            normalizedlengths[i] = sqrt(normalizedlengths[i]);              //Calculating magnitudes
         }
     }
 
     void print_dictionary()
     {
 
-        for (int i = 0; i < terms.size() - 300; i++)
+        for (int i = 0; i < terms.size() - 2500; i++)
         {
             cout << terms[i].first << " : ";
 
@@ -333,7 +333,7 @@ string stem_porter(string word)
     replace_suffix(word, "ly", "");
     replace_suffix(word, "east", "est");
     replace_suffix(word, "er", "");
-    replace_suffix(word, "capt", "captt");
+    //replace_suffix(word, "capt", "captt");
 
     // Rule 4
     if (ends_with(word, "y") && word.length() > 2 && !string("aeiou").find(word[word.length() - 2]) != string::npos)
@@ -365,13 +365,10 @@ string stem_porter(string word)
     }
     if (ends_with(word, "tainci"))
     {
-        word.erase(word.length() - 5, 5);
+        word.erase(word.length() - 2, 2);
     }
 
-    if (ends_with(word, "ion") || (ends_with(word, "ain")))
-    {
-        word.erase(word.length() - 3, 3);
-    }
+    
 
     if (ends_with(word, "iliti") || ends_with(word, "le") && word.length() > 8)
     {
@@ -416,7 +413,7 @@ string stem_porter(string word)
         word.erase(word.length() - 2, 2);
     }
 
-    if (ends_with(word, "att") || ends_with(word, "tter") )
+    if (ends_with(word, "att") || ends_with(word, "tter"))
     {
         if (ends_with(word, "att"))
         {
@@ -639,16 +636,20 @@ void mergeSort(vector<pair<string, vector<Posting>>> &terms, int l, int r, vecto
 void input_query(vector<string> stop_word, vector<pair<string, vector<Posting>>> &terms, Dictionary &dic)
 {
     vector<pair<string, Posting>> query;
-    vector<double> scores(30, 0.0);
+    vector<double> scores(30, 0.0);             //Multiplicative scores vector for dot product
 
-    double query_normlength;
+    double query_normlength;            //Magnitude of query
 
     string input;
 
     scores.resize(30);
     cout << "Enter query : ";
     getline(cin, input);
+    std::transform(input.begin(), input.end(), input.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
 
+    cout<<input<<endl;
+    
     // Use stringstream to split the input into individual strings
     stringstream ss(input);
     string token;
@@ -658,7 +659,7 @@ void input_query(vector<string> stop_word, vector<pair<string, vector<Posting>>>
         if (!is_stopword(stop_word, token))
         {
             string stemmed = stem_porter(token);
-            cout << stemmed << endl;
+            //cout << stemmed << endl;
 
             for (int i = 0; i < query.size(); i++)
             {
@@ -681,16 +682,9 @@ void input_query(vector<string> stop_word, vector<pair<string, vector<Posting>>>
         }
     }
 
-    /* for(int i=0;i<query.size();i++)
-     {
-         int ind=find_binaryindex(terms,query[i].first);
-         query[i].second.idf=terms[ind].second[0].idf;
-         query[i].second.tf_idf=query[i].second.idf*query[i].second.tf;
+    
 
-         cout<<query[i].first<<"  "<<query[i].second.tf<<"--"<<query[i].second.idf<<"--"<<query[i].second.tf_idf<<endl;
-     }*/
-
-    for (int i = 0; i < query.size(); i++)
+    for (int i = 0; i < query.size(); i++)              //Iterating all substrings in query
     {
         int ind = find_index(terms, query[i].first);
         if (ind == -1)
@@ -700,16 +694,12 @@ void input_query(vector<string> stop_word, vector<pair<string, vector<Posting>>>
             query[i].second.tf_idf = 0;
             query_normlength += pow(query[i].second.tf_idf, 2);
         }
-        if (query[i].first == "cricket")
-        {
-            // cout << "ind : " << ind << endl;
-            cout << terms[ind].second[0].idf << endl;
-        }
+       
         if (ind != -1)
         {
             query[i].second.idf = terms[ind].second[0].idf;
-            query[i].second.tf_idf = query[i].second.idf * query[i].second.tf;
-            //query[i].second.tf_idf =1;
+            query[i].second.tf_idf = query[i].second.idf * query[i].second.tf;      //Calculating tf_idf for query
+            // query[i].second.tf_idf =1;
             query_normlength += pow(query[i].second.tf_idf, 2);
 
             for (int j = 0; j < 30; j++)
@@ -718,23 +708,15 @@ void input_query(vector<string> stop_word, vector<pair<string, vector<Posting>>>
                 {
                     if (terms[ind].second[k].doc_id == j + 1)
                     {
-                        if (terms[ind].first == "retir")
-                        {
-                            cout << terms[ind].first << endl;
-                            cout << terms[ind].second[k].doc_id << endl;
-                            cout << "j+1" << j + 1 << endl;
-                            cout << terms[ind].second[k].tf_idf << endl;
-                            cout << query[i].second.tf_idf << endl;
-                            system("pause");
-                        }
-                        scores[j] += terms[ind].second[k].tf_idf * query[i].second.tf_idf;
+                        
+                        scores[j] += terms[ind].second[k].tf_idf * query[i].second.tf_idf;      //Dot product with query to all vectors to
                         break;
                     }
                 }
             }
         }
 
-        cout << query[i].first << "  " << query[i].second.tf << "--" << query[i].second.idf << "--" << query[i].second.tf_idf << endl;
+        
     }
 
     query_normlength = sqrt(query_normlength);
@@ -744,29 +726,39 @@ void input_query(vector<string> stop_word, vector<pair<string, vector<Posting>>>
     {
         cosine_scores.push_back(make_pair(i + 1, (scores[i] / (query_normlength * dic.normalizedlengths[i]))));
     }
-    sort(cosine_scores.begin(), cosine_scores.end(), [](const auto &x, const auto &y)
+    sort(cosine_scores.begin(), cosine_scores.end(), [](const auto &x, const auto &y)   //Sorting cosine scores to display in ascending
          { return x.second > y.second; });
 
-    cout << "Multiplied Scores ---------------" << endl
-         << endl;
-    for (int i = 0; i < 30; i++)
-    {
-        cout << "Doc ) " << i + 1 << " " << scores[i] << endl;
-    }
+    
+    
 
-    cout << "Answer : ";
+    double max_sim = 0.3 * cosine_scores[0].second;
+    cout << "Cosine Scores  : [";
     for (int i = 0; i < 30; i++)
     {
-        if (cosine_scores[i].second > 0)
+        if (cosine_scores[i].second > max_sim)
         {
-            cout << cosine_scores[i].first << " --- " << cosine_scores[i].second << " ," << endl;
+            cout <<  cosine_scores[i].second << " ," ;
         }
 
         // cout<<"Doc : "<<i+1<<"-- "<<(scores[i]/(query_normlength*dic.normalizedlengths[i]))<<endl;
     }
-    cout << endl;
+    cout<<"]";
+    cout << endl<<endl;
+    cout<<"Documents : [\t";
+    for (int i = 0; i < 30; i++)
+    {
+        if (cosine_scores[i].second > max_sim)
+        {
+            cout <<  cosine_scores[i].first << " ,\t" ;
+        }
 
-    cout << "Normalized Query Length  " << query_normlength << endl;
+        // cout<<"Doc : "<<i+1<<"-- "<<(scores[i]/(query_normlength*dic.normalizedlengths[i]))<<endl;
+    }
+    cout<<"]";
+    cout<<endl;
+
+    //cout << "Normalized Query Length  " << query_normlength << endl;
 
     query.clear();
     scores.clear();
@@ -774,34 +766,69 @@ void input_query(vector<string> stop_word, vector<pair<string, vector<Posting>>>
     cosine_scores.shrink_to_fit();
 }
 
+void basic_gui()
+{
+    system("COLOR 0e");
+    system("cla");
+    printf("\e[?251");
+
+    SetConsoleCP(437);
+    SetConsoleOutputCP(437);
+    int bar1 = 177, bar2 = 219;
+    cout << "\n\n\n\t\t\t LLoading...";
+    cout << "\n\n\n\t\t\t\t";
+
+    for (int i = 0; i < 25; i++)
+        cout << (char)bar1;
+
+    cout << "\r";
+    cout << "\t\t\t\t";
+    for (int i = 0; i < 25; i++)
+    {
+        cout << (char)bar2;
+        Sleep(150);
+    }
+
+    cout<<"\n\t\t\t\t "<<(char)1<<" !";
+    system("pause");
+}
 int main()
 {
+    basic_gui();
+    system("cls");
 
-    vector<string> stop_word = read_stopwords();
-    Dictionary dic;
+    vector<string> stop_word = read_stopwords();    //Reading Stopwords
+    Dictionary dic;                                 //Creating Dictionary object
 
     for (int i = 0; i < 30; i++)
     {
-        string filedata = readfile(i + 1);
-        vector<string> tokens = tokenize(filedata, stop_word);
-        dic.addTerm(tokens, i + 1);
+        string filedata = readfile(i + 1);                      //Reading filewise data
+        vector<string> tokens = tokenize(filedata, stop_word);  //Tokenizing Filewise data
+        dic.addTerm(tokens, i + 1);                             //Adding terms of each document in dictionary 
     }
-    //dic.calculate_maxfreq();
-    //dic.calculate_tf();
-    dic.calculate_tfidfs();
+    // dic.calculate_maxfreq();
+    // dic.calculate_tf();
+
+    dic.calculate_tfidfs();                                     //Calculating tf_idf scores for terms in dictionary
     int n = dic.terms.size();
-    vector<pair<string, vector<Posting>>> temp(n);
+    vector<pair<string, vector<Posting>>> temp(n);              //Sorting dictionary to retrieve in logn
     mergeSort(dic.terms, 0, n - 1, temp);
+
     dic.print_dictionary();
-    cout << dic.terms.size() << endl;
+    
     while (1)
     {
         input_query(stop_word, dic.terms, dic);
-    }
-    for (int i = 0; i < dic.normalizedlengths.size(); i++)
-    {
-        cout << i + 1 << " " << dic.normalizedlengths[i] << endl;
-    }
 
-    cout << dic.terms.size() << endl;
+        cout<<endl<<"Press 1 for Continue... || Press 0 for exit...  ";
+        int v;
+        cin>>v;
+        cin.ignore();
+        if(v==0)
+        break;
+        system("cls");
+    }
+    
+
+    
 }
